@@ -291,7 +291,7 @@ const getRandomColor = () => {
 const startRaceHandler = (chart) => {
 
     // Fetch all countries and history of cases
-    fetch('https://coronavirus-tracker-api.herokuapp.com/confirmed')
+    fetch('https://www.arction.com/lightningchart-js-interactive-examples/data/covid/confirmed.json')
         .then(res => res.json())
         .then(data => {
 
