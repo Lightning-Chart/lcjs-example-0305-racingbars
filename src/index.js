@@ -10,16 +10,15 @@ const {
     lightningChart,
     SolidFill,
     ColorHEX,
-    emptyFill,
-    emptyLine,
     LinearGradientFill,
     AnimationEasings,
     Animator,
     UIOrigins,
     UILayoutBuilders,
     AxisTickStrategies,
-    Themes,
-    AxisScrollStrategies
+    UIElementBuilders,
+    AxisScrollStrategies,
+    Themes
 } = lcjs
 
 const ls = lightningChart()
@@ -63,19 +62,14 @@ const barChart = options => {
         .setMouseInteractions(false)
 
     // Set custom label for Y-axis
-    const setTickLabels = (entry, y) => {
-        axisY.addCustomTick()
+    const createTickLabel = (entry, y) => {
+        return axisY.addCustomTick(UIElementBuilders.AxisTick)
             .setValue(y + rectGap)
             .setGridStrokeLength(0)
             .setTextFormatter(_ => entry.country)
             .setMarker((marker) => marker
-                .setBackground((background) => background
-                    .setFillStyle(emptyFill)
-                    .setStrokeStyle(emptyLine)
-                )
                 .setTextFillStyle(new SolidFill({ color: ColorHEX('#aaaf') }))
-                .setFont(fontSettings => fontSettings.setSize(17))
-                .setPadding(10)
+                .setTextFont(fontSettings => fontSettings.setSize(17))
             )
     }
 
@@ -105,7 +99,7 @@ const barChart = options => {
         // Add TextBox element to the bar
         const label = chart.addUIElement(
             UILayoutBuilders.TextBox,
-            { x: axisX.scale, y: axisY.scale }
+            { x: axisX, y: axisY }
         )
             .setOrigin(UIOrigins.LeftBottom)
             .setPosition({
@@ -113,11 +107,11 @@ const barChart = options => {
                 y: y
             })
             .setText(entry.value.toLocaleString())
-            .setFont(fontSettings => fontSettings.setSize(15))
+            .setTextFont(fontSettings => fontSettings.setSize(15))
             .setPadding(10)
 
         // Set label title and position
-        setTickLabels(entry, y)
+        const tick = createTickLabel(entry, y)
 
         // Set interval for Y axis
         axisY.setInterval(-rectThickness, y)
@@ -130,6 +124,7 @@ const barChart = options => {
             entry,
             rect,
             label,
+            tick,
         }
     }
 
@@ -213,7 +208,7 @@ const barChart = options => {
                     (duration, AnimationEasings.linear)
                     // functions gets 2 arrays of 2 values (range) - initY (prev Y pos) and finalY.y(new Y pos) and rectDimensions.width, sortedCountries[i].value - prev and next width of each bar 
                     // and creates loop with increasing intermediate value (newPos, newWidth)
-                    ([[initY, finalY], [rectDimensions.width, sortedCountries[i].value]], ([newPos, newWidth]) => {
+                    ([[initY, finalY], [rectDimensions.width, sortedCountries[i].value]], ([animatedYPosition, animatedValue]) => {
                         // Reset values 
                         bars[i].entry.country = sortedCountries[i].country
                         bars[i].entry.color = sortedCountries[finalY] ? sortedCountries[finalY].color : sortedCountries[i].color
@@ -221,8 +216,8 @@ const barChart = options => {
                         // Animate x and y positions
                         bars[i].rect.setDimensions({
                             x: 0,
-                            y: newPos,
-                            width: newWidth,
+                            y: animatedYPosition,
+                            width: animatedValue,
                             height: 0.98
                         })
                             // Reset bar color 
@@ -244,13 +239,15 @@ const barChart = options => {
                             .setOrigin(i !== bars.length - 1 ? UIOrigins.LeftCenter : UIOrigins.RightCenter)
                             // Position the label
                             .setPosition({
-                                x: newWidth,
-                                y: newPos > 0 ? (newPos + rectGap) : rectGap
+                                x: animatedValue,
+                                y: animatedYPosition > 0 ? (animatedYPosition + rectGap) : rectGap
                             })
-                            .setText(sortedCountries[i].value.toLocaleString())
+                            .setText(Math.round(animatedValue).toLocaleString())
                             .setPadding(10, 0, 10, 0)
                             // Disable mouse interactions for the label
                             .setMouseInteractions(false)
+                        // update tick position
+                        bars[i].tick.setValue(animatedYPosition + rectGap)
                     })
             }
 

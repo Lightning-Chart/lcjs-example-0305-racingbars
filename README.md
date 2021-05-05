@@ -77,16 +77,16 @@ Direct developer email support can be purchased through a [Support Plan][4] or b
 © Arction Ltd 2009-2020. All rights reserved.
 
 
-[XY cartesian chart]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/classes/chartxy.html
-[Rectangle series]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/classes/rectangleseries.html
-[Solid FillStyle]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/classes/solidfill.html
-[Empty FillStyle]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/globals.html#emptyfill
-[Animator factory]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/globals.html#animator
-[HEX color factory]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/globals.html#colorhex
-[cursor modes]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/enums/autocursormodes.html
-[Axis]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/classes/axis.html
-[AxisTickStrategies]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/globals.html#axistickstrategies
-[Scroll strategies]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/globals.html#axisscrollstrategies
-[UI position origins]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/globals.html#uiorigins
-[UI Layout Builders]: https://www.arction.com/lightningchart-js-api-documentation/v2.2.0/globals.html#uilayoutbuilders
+[XY cartesian chart]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/classes/chartxy.html
+[Rectangle series]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/classes/rectangleseries.html
+[Solid FillStyle]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/classes/solidfill.html
+[Empty FillStyle]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/globals.html#emptyfill
+[Animator factory]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/globals.html#animator
+[HEX color factory]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/globals.html#colorhex
+[cursor modes]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/enums/autocursormodes.html
+[Axis]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/classes/axis.html
+[AxisTickStrategies]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/globals.html#axistickstrategies
+[Scroll strategies]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/globals.html#axisscrollstrategies
+[UI position origins]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/globals.html#uiorigins
+[UI Layout Builders]: https://www.arction.com/lightningchart-js-api-documentation/v3.0.0/globals.html#uilayoutbuilders
 
