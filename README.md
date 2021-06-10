@@ -1,6 +1,6 @@
-# COVID-19 Tracker
+# JavaScript COVID-19 Tracker Chart
 
-![COVID-19 Tracker](racingBars.png)
+![JavaScript COVID-19 Tracker Chart](racingBars.png)
 
 This demo application belongs to the set of examples for LightningChart JS, data visualization library for JavaScript.
 
