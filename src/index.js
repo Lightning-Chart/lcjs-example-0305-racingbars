@@ -10,7 +10,6 @@ const {
     lightningChart,
     SolidFill,
     ColorHEX,
-    LinearGradientFill,
     AnimationEasings,
     Animator,
     UIOrigins,
@@ -18,6 +17,8 @@ const {
     AxisTickStrategies,
     UIElementBuilders,
     AxisScrollStrategies,
+    emptyLine,
+    emptyFill,
     Themes
 } = lcjs
 
@@ -45,8 +46,6 @@ const barChart = options => {
         // Add padding to Chart's right side
         .setPadding({ right: 40 })
         .setMouseInteractions(false);
-
-    const rectangles = chart.addRectangleSeries()
 
     // Cache X axis
     const axisX = chart.getDefaultAxisX()
@@ -82,19 +81,9 @@ const barChart = options => {
             height: rectThickness
         }
 
-        // Add rect to the series.
-        const rect = rectangles.add(rectDimensions)
-
-        // Set individual gradient color for the bar.
-        rect.setFillStyle(new LinearGradientFill(
-            {
-                angle: 90,
-                stops: [
-                    { color: ColorHEX(entry.color), offset: 0 },
-                    { color: ColorHEX(entry.color2), offset: 1 }
-                ]
-            }
-        ))
+        // Each country has its own rectangle series for different style.
+        const rectSeries = chart.addRectangleSeries()
+        const rect = rectSeries.add(rectDimensions)
 
         // Add TextBox element to the bar
         const label = chart.addUIElement(
@@ -109,6 +98,10 @@ const barChart = options => {
             .setText(entry.value.toLocaleString())
             .setTextFont(fontSettings => fontSettings.setSize(15))
             .setPadding(10)
+            .setBackground((background) => background
+                .setFillStyle(emptyFill)
+                .setStrokeStyle(emptyLine)
+            )
 
         // Set label title and position
         const tick = createTickLabel(entry, y)
@@ -157,7 +150,7 @@ const barChart = options => {
 
         // Map list of countries and sort them in the order (First sort by value, then by country)
         const countryList = Object.values(countries).map((c) => (
-            { country: c.country, value: c.history[myday], color: c.color, color2: c.color2 }
+            { country: c.country, value: c.history[myday] }
         )).sort((a, b) => (a.value > b.value) ? 1 : (a.value === b.value) ? ((a.country > b.country) ? 1 : -1) : -1)
 
         // Keep only top 20 countries
@@ -182,14 +175,6 @@ const barChart = options => {
         if (bars.length > 0) {
             for (let i = 0; i < sortedCountries.length; i++) {
 
-                axisY.setTickStrategy(
-                    (tickStrategy) => tickStrategy
-                        .setTextFillStyle(new SolidFill({
-                            color: ColorHEX(bars[i].entry.color)
-                        })) // if commentend - black 
-                )
-
-
                 // Prevent automatic scrolling of Y axis
                 axisY.setScrollStrategy(AxisScrollStrategies.progressive)
 
@@ -211,8 +196,6 @@ const barChart = options => {
                     ([[initY, finalY], [rectDimensions.width, sortedCountries[i].value]], ([animatedYPosition, animatedValue]) => {
                         // Reset values 
                         bars[i].entry.country = sortedCountries[i].country
-                        bars[i].entry.color = sortedCountries[finalY] ? sortedCountries[finalY].color : sortedCountries[i].color
-                        bars[i].entry.color2 = sortedCountries[finalY] ? sortedCountries[finalY].color2 : sortedCountries[i].color2
                         // Animate x and y positions
                         bars[i].rect.setDimensions({
                             x: 0,
@@ -220,17 +203,6 @@ const barChart = options => {
                             width: animatedValue,
                             height: 0.98
                         })
-                            // Reset bar color 
-                            .setFillStyle(
-                                new LinearGradientFill(
-                                    {
-                                        angle: 90,
-                                        stops: [
-                                            { color: ColorHEX(bars[finalY] ? bars[finalY].entry.color : sortedCountries[i].color), offset: 0 },
-                                            { color: ColorHEX(bars[finalY] ? bars[finalY].entry.color2 : sortedCountries[i].color2), offset: 1 }
-                                        ]
-                                    }
-                                ))
                             .restore()
 
                         // Animate labels
@@ -276,15 +248,6 @@ const barChart = options => {
 
 }
 
-const getRandomColor = () => {
-    let letters = '3456789ABC';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * letters.length)];
-    }
-    return color;
-}
-
 const startRaceHandler = (chart) => {
 
     // Fetch all countries and history of cases
@@ -309,12 +272,9 @@ const startRaceHandler = (chart) => {
         // Return only specific information 
         data.forEach(basket => {
 
-            const f = getRandomColor()
             let ob = {
                 country: basket['country'],
-                history: { ...basket['history'] },
-                color: f + '99', // set first color darker 
-                color2: f
+                history: { ...basket['history'] }
             }
 
             // Check if array already contains the country
@@ -327,8 +287,7 @@ const startRaceHandler = (chart) => {
             // Unite object values
             const sum = (obj, newObj) => {
                 Object.keys(obj).map(date => (
-                    obj[date] += newObj[date],
-                    obj.color = newObj.color
+                    obj[date] += newObj[date]
                 ))
             }
 
