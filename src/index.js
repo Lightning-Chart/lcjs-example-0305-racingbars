@@ -19,7 +19,7 @@ const {
     AxisScrollStrategies,
     emptyLine,
     emptyFill,
-    Themes
+    Themes,
 } = lcjs
 
 const ls = lightningChart()
@@ -33,28 +33,33 @@ const duration = 400 // duration of timer and animation
 let y = 0
 let initday = 15
 // 2 days ago. the final day of the race
-let yesterday = new Date(new Date().getFullYear(),new Date().getMonth() , new Date().getDate() - 2).toISOString() // ((d) => { d.setDate(d.getDate() - 2); return d })(new Date)
-let connectionError = '' 
+let yesterday = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 2).toISOString() // ((d) => { d.setDate(d.getDate() - 2); return d })(new Date)
+let connectionError = ''
 
-const barChart = options => {
+const barChart = (options) => {
     // Create a XY chart and add a RectSeries to it for rendering rectangles.
-    const chart = ls.ChartXY(options)
+    const chart = ls
+        .ChartXY(options)
         // Use Chart's title to track date
-        .setTitle('COVID-19 cases ' + new Date(2020, 2, 15).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }))
+        .setTitle(
+            'COVID-19 cases ' + new Date(2020, 2, 15).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }),
+        )
         // Disable AutoCursor (hide information of bar by hover the mouse over it)
         .setAutoCursorMode(0)
         // Add padding to Chart's right side
         .setPadding({ right: 40 })
-        .setMouseInteractions(false);
+        .setMouseInteractions(false)
 
     // Cache X axis
-    const axisX = chart.getDefaultAxisX()
+    const axisX = chart
+        .getDefaultAxisX()
         // Disable the scrolling animation for the X Axis, so it doesn't interfere.
         .setAnimationScroll(false)
-        .setMouseInteractions(false);
+        .setMouseInteractions(false)
 
-    // Cache Y axis 
-    const axisY = chart.getDefaultAxisY()
+    // Cache Y axis
+    const axisY = chart
+        .getDefaultAxisY()
         // Hide default ticks
         .setTickStrategy(AxisTickStrategies.Empty)
         // Disable Mouse interactions for the Y Axis
@@ -62,54 +67,51 @@ const barChart = options => {
 
     // Set custom label for Y-axis
     const createTickLabel = (entry, y) => {
-        return axisY.addCustomTick(UIElementBuilders.AxisTick)
+        return axisY
+            .addCustomTick()
             .setValue(y + rectGap)
             .setGridStrokeLength(0)
-            .setTextFormatter(_ => entry.country)
-            .setMarker((marker) => marker
-                .setTextFillStyle(new SolidFill({ color: ColorHEX('#aaaf') }))
-                .setTextFont(fontSettings => fontSettings.setSize(17))
+            .setTextFormatter((_) => entry.country)
+            .setMarker((marker) =>
+                marker
+                    .setTextFillStyle(new SolidFill({ color: ColorHEX('#aaaf') }))
+                    .setTextFont((fontSettings) => fontSettings.setSize(17)),
             )
     }
 
     // Function returns single bar with property of dimensions, data(entry) and label
-    const addCountryHandler = entry => {
+    const addCountryHandler = (entry) => {
         const rectDimensions = {
             x: 0,
             y: y,
             width: entry.value,
-            height: rectThickness
+            height: rectThickness,
         }
 
         // Each country has its own rectangle series for different style.
         const rectSeries = chart.addRectangleSeries()
-        const rect = rectSeries.add(rectDimensions)
+        const rect = rectSeries.add(rectDimensions).setStrokeStyle(emptyLine)
 
         // Add TextBox element to the bar
-        const label = chart.addUIElement(
-            UILayoutBuilders.TextBox,
-            { x: axisX, y: axisY }
-        )
+        const label = chart
+            .addUIElement(UILayoutBuilders.TextBox, { x: axisX, y: axisY })
             .setOrigin(UIOrigins.LeftBottom)
             .setPosition({
                 x: entry.value,
-                y: y
+                y: y,
             })
             .setText(entry.value.toLocaleString())
-            .setTextFont(fontSettings => fontSettings.setSize(15))
+            .setTextFont((fontSettings) => fontSettings.setSize(15))
             .setPadding(10)
-            .setBackground((background) => background
-                .setFillStyle(emptyFill)
-                .setStrokeStyle(emptyLine)
-            )
+            .setBackground((background) => background.setFillStyle(emptyFill).setStrokeStyle(emptyLine))
 
         // Set label title and position
         const tick = createTickLabel(entry, y)
 
         // Set interval for Y axis
-        axisY.setInterval(-rectThickness, y)
+        axisY.setInterval({ start: -rectThickness, end: y, stopAxisAfter: false })
 
-        // Increase value of Y variable 
+        // Increase value of Y variable
         y += rectThickness
 
         // Return figure
@@ -125,17 +127,13 @@ const barChart = options => {
     const addCountries = (entries) => {
         axisX
             .setMouseInteractions(false) // Cache Y axis
-            .setTickStrategy(
-                AxisTickStrategies.Numeric,
-                (tickStrategy) => tickStrategy
-                    //   .setMinorTickStyle((tickStyle) => tickStyle.setTickPadding(3, 20))
-                    .setFormattingFunction(timeScaled => {
-                        if (timeScaled / 1000 >= 1000) {
-                            return timeScaled / 1000000 + 'M'
-                        }
-                        return timeScaled / 1000 + 'K'
+            .setTickStrategy(AxisTickStrategies.Numeric, (tickStrategy) =>
+                tickStrategy.setFormattingFunction((timeScaled) => {
+                    if (timeScaled / 1000 >= 1000) {
+                        return `${Math.round(timeScaled / 1000000)}M`
                     }
-                    )
+                    return `${Math.round(timeScaled / 1000)}K`
+                }),
             )
         for (const entry of entries) {
             bars.push(addCountryHandler(entry))
@@ -144,14 +142,13 @@ const barChart = options => {
 
     // Sorting and splicing array of data
     const sortCountries = (data, raceDay) => {
-
-        let myday = (raceDay.getMonth() + 1) + '/' + raceDay.getDate() + '/' + raceDay.getFullYear().toString().substr(-2)
+        let myday = raceDay.getMonth() + 1 + '/' + raceDay.getDate() + '/' + raceDay.getFullYear().toString().substr(-2)
         const countries = { ...data }
 
         // Map list of countries and sort them in the order (First sort by value, then by country)
-        const countryList = Object.values(countries).map((c) => (
-            { country: c.country, value: c.history[myday] }
-        )).sort((a, b) => (a.value > b.value) ? 1 : (a.value === b.value) ? ((a.country > b.country) ? 1 : -1) : -1)
+        const countryList = Object.values(countries)
+            .map((c) => ({ country: c.country, value: c.history[myday] }))
+            .sort((a, b) => (a.value > b.value ? 1 : a.value === b.value ? (a.country > b.country ? 1 : -1) : -1))
 
         // Keep only top 20 countries
         countryList.splice(0, countryList.length - 20)
@@ -161,12 +158,15 @@ const barChart = options => {
 
     // Loop for re-rendering list of data
     const startRace = (data) => {
-
         // Inital day of race
         let raceDay = new Date(2020, 2, initday)
 
-        // Set title of chart 
-        chart.setTitle(connectionError + ' COVID-19 cases ' + raceDay.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }))
+        // Set title of chart
+        chart.setTitle(
+            connectionError +
+                ' COVID-19 cases ' +
+                raceDay.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }),
+        )
 
         // Get sorting data
         const sortedCountries = sortCountries(data, raceDay)
@@ -174,36 +174,45 @@ const barChart = options => {
         // Check if the functions(startRace) has already done first pass
         if (bars.length > 0) {
             for (let i = 0; i < sortedCountries.length; i++) {
-
                 // Prevent automatic scrolling of Y axis
                 axisY.setScrollStrategy(AxisScrollStrategies.progressive)
 
                 // Get index of each bar before sorting
-                const initY = bars.map((e) => (e.entry.country)).indexOf(sortedCountries[i].country);
+                const initY = bars.map((e) => e.entry.country).indexOf(sortedCountries[i].country)
 
                 // Get index of each bar after sorting
-                const finalY = sortedCountries.map((e) => (e.country)).indexOf(sortedCountries[i].country);
+                const finalY = sortedCountries.map((e) => e.country).indexOf(sortedCountries[i].country)
 
                 // Get Dimensions, Position And Size of bar[i]
                 const rectDimensions = bars[i].rect.getDimensionsPositionAndSize()
 
                 // Animation of changing the position of bar[i] by Y axis
-                bars[i].animator = Animator(() => { undefined }) // function that executes after animation 
+                bars[i].animator = Animator(() => {
+                    undefined
+                })(
+                    // function that executes after animation
                     // Time for animation and easing type
-                    (duration, AnimationEasings.linear)
-                    // functions gets 2 arrays of 2 values (range) - initY (prev Y pos) and finalY.y(new Y pos) and rectDimensions.width, sortedCountries[i].value - prev and next width of each bar 
+                    duration,
+                    AnimationEasings.linear,
+                )(
+                    // functions gets 2 arrays of 2 values (range) - initY (prev Y pos) and finalY.y(new Y pos) and rectDimensions.width, sortedCountries[i].value - prev and next width of each bar
                     // and creates loop with increasing intermediate value (newPos, newWidth)
-                    ([[initY, finalY], [rectDimensions.width, sortedCountries[i].value]], ([animatedYPosition, animatedValue]) => {
-                        // Reset values 
+                    [
+                        [initY, finalY],
+                        [rectDimensions.width, sortedCountries[i].value],
+                    ],
+                    ([animatedYPosition, animatedValue]) => {
+                        // Reset values
                         bars[i].entry.country = sortedCountries[i].country
                         // Animate x and y positions
-                        bars[i].rect.setDimensions({
-                            x: 0,
-                            y: animatedYPosition,
-                            width: animatedValue,
-                            height: 0.98
-                        })
-                            .restore()
+                        bars[i].rect
+                            .setDimensions({
+                                x: 0,
+                                y: animatedYPosition,
+                                width: animatedValue,
+                                height: 0.98,
+                            })
+                            .setVisible(true)
 
                         // Animate labels
                         bars[i].label
@@ -212,7 +221,7 @@ const barChart = options => {
                             // Position the label
                             .setPosition({
                                 x: animatedValue,
-                                y: animatedYPosition > 0 ? (animatedYPosition + rectGap) : rectGap
+                                y: animatedYPosition > 0 ? animatedYPosition + rectGap : rectGap,
                             })
                             .setText(Math.round(animatedValue).toLocaleString())
                             .setPadding(10, 0, 10, 0)
@@ -220,9 +229,9 @@ const barChart = options => {
                             .setMouseInteractions(false)
                         // update tick position
                         bars[i].tick.setValue(animatedYPosition + rectGap)
-                    })
+                    },
+                )
             }
-
         } else {
             // If function executes for the first time, add countries to the Chart.
             addCountries(sortedCountries)
@@ -243,67 +252,55 @@ const barChart = options => {
     return {
         addCountries,
         startRace,
-        setTitle
+        setTitle,
     }
-
 }
 
 const startRaceHandler = (chart) => {
-
     // Fetch all countries and history of cases
-    fetch('https://www.arction.com/lightningchart-js-interactive-examples/data/covid/confirmed.json')
-        .then(res => res.json())
-        .then(data => {
-
+    fetch('https://lightningchart.com/lightningchart-js-interactive-examples/data/covid/confirmed.json')
+        .then((res) => res.json())
+        .then((data) => {
             const dat = [...data.locations]
 
             // After fetching and merging data create bars
             chart.startRace(mergeData(dat))
         })
-        .catch(err => {
+        .catch((err) => {
             yesterday = '2020-05-30T21:00:00.000Z'
             connectionError = 'Example of data'
             chart.startRace(mergeData(fallbackData))
         })
 
     // Some countries are divided by region and it is needed to megre them
-    const mergeData = data => {
+    const mergeData = (data) => {
         const result = []
-        // Return only specific information 
-        data.forEach(basket => {
-
+        // Return only specific information
+        data.forEach((basket) => {
             let ob = {
                 country: basket['country'],
-                history: { ...basket['history'] }
+                history: { ...basket['history'] },
             }
 
             // Check if array already contains the country
             let has = false
-            result.find(obj => obj.country == ob.country
-                ? has = true
-                : has = false
-            )
+            result.find((obj) => (obj.country == ob.country ? (has = true) : (has = false)))
 
             // Unite object values
             const sum = (obj, newObj) => {
-                Object.keys(obj).map(date => (
-                    obj[date] += newObj[date]
-                ))
+                Object.keys(obj).map((date) => (obj[date] += newObj[date]))
             }
 
             // Format the data
             if (has) {
-                result.find(obj => (
-                    obj.country == ob.country
-                    && sum(obj.history, ob.history))
-                )
+                result.find((obj) => obj.country == ob.country && sum(obj.history, ob.history))
             } else {
                 result.push(ob)
             }
-        });
+        })
 
-        return result;
-    };
+        return result
+    }
 }
 
 // Create chart
@@ -314,8 +311,7 @@ const newchart = barChart({
 // Start fetching
 startRaceHandler(newchart)
 
-
-//fallback data 
+//fallback data
 const fallbackData = [
     {
         country: 'US',
@@ -398,7 +394,7 @@ const fallbackData = [
             '5/29/20': 1755010,
             '5/30/20': 1778689,
             '5/31/20': 1797763,
-        }
+        },
     },
     {
         country: 'Russia',
@@ -480,8 +476,8 @@ const fallbackData = [
             '5/28/20': 379051,
             '5/29/20': 387623,
             '5/30/20': 396575,
-            '5/31/20': 405843
-        }
+            '5/31/20': 405843,
+        },
     },
     {
         country: 'Spain',
@@ -563,8 +559,8 @@ const fallbackData = [
             '5/28/20': 237906,
             '5/29/20': 238564,
             '5/30/20': 239228,
-            '5/31/20': 239479
-        }
+            '5/31/20': 239479,
+        },
     },
     {
         country: 'Turkey',
@@ -647,7 +643,7 @@ const fallbackData = [
             '5/29/20': 162120,
             '5/30/20': 163103,
             '5/31/20': 163942,
-        }
+        },
     },
     {
         country: 'Germany',
@@ -730,7 +726,7 @@ const fallbackData = [
             '5/29/20': 182922,
             '5/30/20': 183189,
             '5/31/20': 183410,
-        }
+        },
     },
     {
         country: 'Brazil',
@@ -813,7 +809,7 @@ const fallbackData = [
             '5/29/20': 465166,
             '5/30/20': 498440,
             '5/31/20': 514849,
-        }
+        },
     },
     {
         country: 'Italy',
@@ -875,28 +871,28 @@ const fallbackData = [
             '5/8/20': 217185,
             '5/9/20': 218268,
             '5/10/20': 219070,
-            "5/11/20": 219814,
-            "5/12/20": 221216,
-            "5/13/20": 222104,
-            "5/14/20": 223096,
-            "5/15/20": 223885,
-            "5/16/20": 224760,
-            "5/17/20": 225435,
-            "5/18/20": 225886,
-            "5/19/20": 226699,
-            "5/20/20": 227364,
-            "5/21/20": 228006,
-            "5/22/20": 228658,
-            "5/23/20": 229327,
-            "5/24/20": 229858,
-            "5/25/20": 230158,
-            "5/26/20": 230555,
-            "5/27/20": 231139,
-            "5/28/20": 231732,
-            "5/29/20": 232248,
-            "5/30/20": 232664,
-            "5/31/20": 232997
-        }
+            '5/11/20': 219814,
+            '5/12/20': 221216,
+            '5/13/20': 222104,
+            '5/14/20': 223096,
+            '5/15/20': 223885,
+            '5/16/20': 224760,
+            '5/17/20': 225435,
+            '5/18/20': 225886,
+            '5/19/20': 226699,
+            '5/20/20': 227364,
+            '5/21/20': 228006,
+            '5/22/20': 228658,
+            '5/23/20': 229327,
+            '5/24/20': 229858,
+            '5/25/20': 230158,
+            '5/26/20': 230555,
+            '5/27/20': 231139,
+            '5/28/20': 231732,
+            '5/29/20': 232248,
+            '5/30/20': 232664,
+            '5/31/20': 232997,
+        },
     },
     {
         country: 'India',
@@ -979,6 +975,6 @@ const fallbackData = [
             '5/29/20': 173491,
             '5/30/20': 181827,
             '5/31/20': 190609,
-        }
-    }
+        },
+    },
 ]
