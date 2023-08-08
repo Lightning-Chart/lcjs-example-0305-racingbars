@@ -21,39 +21,19 @@ The demo can be used as an example or a seed project. Local execution requires t
 
 _Also known as Bar Graph, Column Chart or Column Graph_
 
-A custom chart type (Racing Bars Chart) to visualize tracking of the Co-Vid 19 virus.
+Showcase of LightningChart JS Bar Charts in a _Racing Bar Chart_ context, to visualize tracking of the Co-Vid 19 virus.
 Tha data (country, history of cases) that is taken from API (https://coronavirus-tracker-api.herokuapp.com/confirmed)
 In setInterval loop data is sorted by total COVID cases per each day and top 20 cases added to
-the bars series in format `{ category: string, value: number, color: string }`. (color - random value in HEX format)
+the bars series in format `{ category: string, value: number }`.
 
-The Animator was used to animate the changing of the value and position order of each county in the list.
-
-```javascript
-// create chart
-const newchart = barChart()
-
-
-// Add bars.
-chart.addValues([
-    { country: 'Belgium', value: 26,666, color: '#ffffff' }
-])
-```
+Sorting and animations are built-in to the chart feature, which makes the application code minimal and simple to maintain.
 
 
 ## API Links
 
-* [XY cartesian chart]
-* [Rectangle series]
-* [Solid FillStyle]
-* [Empty FillStyle]
-* [Animator factory]
-* [HEX color factory]
-* [cursor modes]
-* [Axis]
-* [AxisTickStrategies]
-* [Scroll strategies]
-* [UI position origins]
-* [UI Layout Builders]
+* [Bar chart]
+* [Bar chart Value Axis]
+* [Bar chart Category Axis]
 
 
 ## Support
@@ -77,16 +57,7 @@ Direct developer email support can be purchased through a [Support Plan][4] or b
 © LightningChart Ltd 2009-2022. All rights reserved.
 
 
-[XY cartesian chart]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/classes/ChartXY.html
-[Rectangle series]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/classes/RectangleSeries.html
-[Solid FillStyle]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/classes/SolidFill.html
-[Empty FillStyle]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/variables/emptyFill-1.html
-[Animator factory]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/Animator.html
-[HEX color factory]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/functions/ColorHEX.html
-[cursor modes]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/enums/AutoCursorModes.html
-[Axis]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/classes/Axis.html
-[AxisTickStrategies]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/variables/AxisTickStrategies.html
-[Scroll strategies]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/variables/AxisScrollStrategies.html
-[UI position origins]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/variables/UIOrigins.html
-[UI Layout Builders]: https://lightningchart.com/lightningchart-js-api-documentation/v4.1.0/variables/UILayoutBuilders.html
+[Bar chart]: https://lightningchart.com/js-charts/api-documentation/v4.2.0/interfaces/BarChart.html
+[Bar chart Value Axis]: https://lightningchart.com/js-charts/api-documentation/v4.2.0/classes/BarChartValueAxis.html
+[Bar chart Category Axis]: https://lightningchart.com/js-charts/api-documentation/v4.2.0/classes/BarChartCategoryAxis.html
 

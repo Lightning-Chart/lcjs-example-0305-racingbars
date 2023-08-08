@@ -6,257 +6,78 @@
 const lcjs = require('@arction/lcjs')
 
 // Extract required parts from LightningChartJS.
-const {
-    lightningChart,
-    SolidFill,
-    ColorHEX,
-    AnimationEasings,
-    Animator,
-    UIOrigins,
-    UILayoutBuilders,
-    AxisTickStrategies,
-    UIElementBuilders,
-    AxisScrollStrategies,
-    emptyLine,
-    emptyFill,
-    Themes,
-} = lcjs
+const { lightningChart, BarChartTypes, AutoCursorModes, AxisTickStrategies, FormattingFunctions, Themes } = lcjs
 
-const ls = lightningChart()
-
-// Variables used in the example
-const rectThickness = 1
-const rectGap = 0.5
-const bars = []
-const duration = 400 // duration of timer and animation
-
-let y = 0
 let initday = 15
-// 2 days ago. the final day of the race
-let yesterday = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 2).toISOString() // ((d) => { d.setDate(d.getDate() - 2); return d })(new Date)
+let lastDay = new Date('November 15, 2022').toISOString()
 let connectionError = ''
 
-const barChart = (options) => {
-    // Create a XY chart and add a RectSeries to it for rendering rectangles.
-    const chart = ls
-        .ChartXY(options)
-        // Use Chart's title to track date
-        .setTitle(
-            'COVID-19 cases ' + new Date(2020, 2, 15).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }),
-        )
-        // Disable AutoCursor (hide information of bar by hover the mouse over it)
-        .setAutoCursorMode(0)
-        // Add padding to Chart's right side
-        .setPadding({ right: 40 })
-        .setMouseInteractions(false)
+const lc = lightningChart()
+const barChart = lc
+    .BarChart({
+        type: BarChartTypes.Horizontal,
+        // theme: Themes.darkGold
+    })
+    .setTitle('COVID-19 cases ' + new Date(2020, 2, 15).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }))
+    .setAutoCursorMode(AutoCursorModes.disabled)
+    .setAnimationCategoryPosition(true, 2)
 
-    // Cache X axis
-    const axisX = chart
-        .getDefaultAxisX()
-        // Disable the scrolling animation for the X Axis, so it doesn't interfere.
-        .setAnimationScroll(false)
-        .setMouseInteractions(false)
+barChart.valueAxis.setTickStrategy(AxisTickStrategies.Numeric, (ticks) => ticks.setFormattingFunction(FormattingFunctions.NumericUnits))
 
-    // Cache Y axis
-    const axisY = chart
-        .getDefaultAxisY()
-        // Hide default ticks
-        .setTickStrategy(AxisTickStrategies.Empty)
-        // Disable Mouse interactions for the Y Axis
-        .setMouseInteractions(false)
+// Keep track of country colors so they don't change randomly as top 20 displayed countries change over time.
+const countryFillStyleCache = new Map()
+const theme = barChart.getTheme()
+const fillStylePalette =
+    typeof theme.rectangleSeriesFillStyle === 'function' ? theme.rectangleSeriesFillStyle : () => theme.rectangleSeriesFillStyle
 
-    // Set custom label for Y-axis
-    const createTickLabel = (entry, y) => {
-        return axisY
-            .addCustomTick()
-            .setValue(y + rectGap)
-            .setGridStrokeLength(0)
-            .setTextFormatter((_) => entry.country)
-            .setMarker((marker) =>
-                marker
-                    .setTextFillStyle(new SolidFill({ color: ColorHEX('#aaaf') }))
-                    .setTextFont((fontSettings) => fontSettings.setSize(17)),
-            )
-    }
+// Loop for adding bars
+const addCountries = (entries) => {
+    barChart.setData(entries.map((item) => ({ category: item.country, value: item.value })))
+    barChart.getBars().forEach((bar) => {
+        const fill = countryFillStyleCache.get(bar.category) || fillStylePalette(countryFillStyleCache.size)
+        countryFillStyleCache.set(bar.category, fill)
+        bar.setFillStyle(fill)
+    })
+}
 
-    // Function returns single bar with property of dimensions, data(entry) and label
-    const addCountryHandler = (entry) => {
-        const rectDimensions = {
-            x: 0,
-            y: y,
-            width: entry.value,
-            height: rectThickness,
-        }
+// Sorting and splicing array of data
+const sortCountries = (data, raceDay) => {
+    let myday = raceDay.getMonth() + 1 + '/' + raceDay.getDate() + '/' + raceDay.getFullYear().toString().substr(-2)
+    const countries = { ...data }
 
-        // Each country has its own rectangle series for different style.
-        const rectSeries = chart.addRectangleSeries()
-        const rect = rectSeries.add(rectDimensions).setStrokeStyle(emptyLine)
+    // Map list of countries and sort them in the order (First sort by value, then by country)
+    const countryList = Object.values(countries)
+        .map((c) => ({ country: c.country, value: c.history[myday] }))
+        .sort((a, b) => (a.value > b.value ? 1 : a.value === b.value ? (a.country > b.country ? 1 : -1) : -1))
 
-        // Add TextBox element to the bar
-        const label = chart
-            .addUIElement(UILayoutBuilders.TextBox, { x: axisX, y: axisY })
-            .setOrigin(UIOrigins.LeftBottom)
-            .setPosition({
-                x: entry.value,
-                y: y,
-            })
-            .setText(entry.value.toLocaleString())
-            .setTextFont((fontSettings) => fontSettings.setSize(15))
-            .setPadding(10)
-            .setBackground((background) => background.setFillStyle(emptyFill).setStrokeStyle(emptyLine))
+    // Keep only top x countries
+    const displayCount = 20
+    countryList.splice(0, countryList.length - displayCount)
 
-        // Set label title and position
-        const tick = createTickLabel(entry, y)
+    return countryList
+}
 
-        // Set interval for Y axis
-        axisY.setInterval({ start: -rectThickness, end: y, stopAxisAfter: false })
+// Loop for re-rendering list of data
+const startRace = (data) => {
+    // Inital day of race
+    let raceDay = new Date(2020, 2, initday)
 
-        // Increase value of Y variable
-        y += rectThickness
+    // Set title of chart
+    barChart.setTitle(
+        connectionError + ' COVID-19 cases ' + raceDay.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }),
+    )
 
-        // Return figure
-        return {
-            entry,
-            rect,
-            label,
-            tick,
-        }
-    }
+    const sortedCountries = sortCountries(data, raceDay)
+    addCountries(sortedCountries)
 
-    // Loop for adding bars
-    const addCountries = (entries) => {
-        axisX
-            .setMouseInteractions(false) // Cache Y axis
-            .setTickStrategy(AxisTickStrategies.Numeric, (tickStrategy) =>
-                tickStrategy.setFormattingFunction((timeScaled) => {
-                    if (timeScaled / 1000 >= 1000) {
-                        return `${Math.round(timeScaled / 1000000)}M`
-                    }
-                    return `${Math.round(timeScaled / 1000)}K`
-                }),
-            )
-        for (const entry of entries) {
-            bars.push(addCountryHandler(entry))
-        }
-    }
-
-    // Sorting and splicing array of data
-    const sortCountries = (data, raceDay) => {
-        let myday = raceDay.getMonth() + 1 + '/' + raceDay.getDate() + '/' + raceDay.getFullYear().toString().substr(-2)
-        const countries = { ...data }
-
-        // Map list of countries and sort them in the order (First sort by value, then by country)
-        const countryList = Object.values(countries)
-            .map((c) => ({ country: c.country, value: c.history[myday] }))
-            .sort((a, b) => (a.value > b.value ? 1 : a.value === b.value ? (a.country > b.country ? 1 : -1) : -1))
-
-        // Keep only top 20 countries
-        countryList.splice(0, countryList.length - 20)
-
-        return countryList
-    }
-
-    // Loop for re-rendering list of data
-    const startRace = (data) => {
-        // Inital day of race
-        let raceDay = new Date(2020, 2, initday)
-
-        // Set title of chart
-        chart.setTitle(
-            connectionError +
-                ' COVID-19 cases ' +
-                raceDay.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }),
-        )
-
-        // Get sorting data
-        const sortedCountries = sortCountries(data, raceDay)
-
-        // Check if the functions(startRace) has already done first pass
-        if (bars.length > 0) {
-            for (let i = 0; i < sortedCountries.length; i++) {
-                // Prevent automatic scrolling of Y axis
-                axisY.setScrollStrategy(AxisScrollStrategies.progressive)
-
-                // Get index of each bar before sorting
-                const initY = bars.map((e) => e.entry.country).indexOf(sortedCountries[i].country)
-
-                // Get index of each bar after sorting
-                const finalY = sortedCountries.map((e) => e.country).indexOf(sortedCountries[i].country)
-
-                // Get Dimensions, Position And Size of bar[i]
-                const rectDimensions = bars[i].rect.getDimensionsPositionAndSize()
-
-                // Animation of changing the position of bar[i] by Y axis
-                bars[i].animator = Animator(() => {
-                    undefined
-                })(
-                    // function that executes after animation
-                    // Time for animation and easing type
-                    duration,
-                    AnimationEasings.linear,
-                )(
-                    // functions gets 2 arrays of 2 values (range) - initY (prev Y pos) and finalY.y(new Y pos) and rectDimensions.width, sortedCountries[i].value - prev and next width of each bar
-                    // and creates loop with increasing intermediate value (newPos, newWidth)
-                    [
-                        [initY, finalY],
-                        [rectDimensions.width, sortedCountries[i].value],
-                    ],
-                    ([animatedYPosition, animatedValue]) => {
-                        // Reset values
-                        bars[i].entry.country = sortedCountries[i].country
-                        // Animate x and y positions
-                        bars[i].rect
-                            .setDimensions({
-                                x: 0,
-                                y: animatedYPosition,
-                                width: animatedValue,
-                                height: 0.98,
-                            })
-                            .setVisible(true)
-
-                        // Animate labels
-                        bars[i].label
-                            // The topmost country's label should be inside the bar, the others should be to the right of the bar.
-                            .setOrigin(i !== bars.length - 1 ? UIOrigins.LeftCenter : UIOrigins.RightCenter)
-                            // Position the label
-                            .setPosition({
-                                x: animatedValue,
-                                y: animatedYPosition > 0 ? animatedYPosition + rectGap : rectGap,
-                            })
-                            .setText(Math.round(animatedValue).toLocaleString())
-                            .setPadding(10, 0, 10, 0)
-                            // Disable mouse interactions for the label
-                            .setMouseInteractions(false)
-                        // update tick position
-                        bars[i].tick.setValue(animatedYPosition + rectGap)
-                    },
-                )
-            }
-        } else {
-            // If function executes for the first time, add countries to the Chart.
-            addCountries(sortedCountries)
-        }
-
-        // we've bot reached the last day (i.e. yesterday) execute the function again and increase the day
-        if (raceDay.toISOString() !== yesterday) {
-            initday++
-            setTimeout(() => startRace(data), duration)
-        }
-    }
-
-    // function is used for showing errors on line 328
-    const setTitle = (msg) => {
-        chart.setTitle(msg)
-    }
-
-    return {
-        addCountries,
-        startRace,
-        setTitle,
+    // we've bot reached the last day (i.e. yesterday) execute the function again and increase the day
+    if (raceDay.toISOString() !== lastDay) {
+        initday++
+        setTimeout(() => startRace(data), 100)
     }
 }
 
-const startRaceHandler = (chart) => {
+const startRaceHandler = () => {
     // Fetch all countries and history of cases
     fetch('https://lightningchart.com/lightningchart-js-interactive-examples/data/covid/confirmed.json')
         .then((res) => res.json())
@@ -264,12 +85,12 @@ const startRaceHandler = (chart) => {
             const dat = [...data.locations]
 
             // After fetching and merging data create bars
-            chart.startRace(mergeData(dat))
+            startRace(mergeData(dat))
         })
         .catch((err) => {
-            yesterday = '2020-05-30T21:00:00.000Z'
+            lastDay = '2020-05-30T21:00:00.000Z'
             connectionError = 'Example of data'
-            chart.startRace(mergeData(fallbackData))
+            startRace(mergeData(fallbackData))
         })
 
     // Some countries are divided by region and it is needed to megre them
@@ -303,13 +124,8 @@ const startRaceHandler = (chart) => {
     }
 }
 
-// Create chart
-const newchart = barChart({
-    // theme: Themes.light
-})
-
 // Start fetching
-startRaceHandler(newchart)
+startRaceHandler(barChart)
 
 //fallback data
 const fallbackData = [
