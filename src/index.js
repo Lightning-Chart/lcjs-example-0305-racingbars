@@ -16,7 +16,7 @@ const lc = lightningChart()
 const barChart = lc
     .BarChart({
         type: BarChartTypes.Horizontal,
-        // theme: Themes.darkGold
+        theme: Themes[new URLSearchParams(window.location.search).get('theme') || 'darkGold'] || undefined,
     })
     .setTitle('COVID-19 cases ' + new Date(2020, 2, 15).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }))
     .setAutoCursorMode(AutoCursorModes.disabled)
