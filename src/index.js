@@ -12,7 +12,9 @@ let initday = 15
 let lastDay = new Date('November 15, 2022').toISOString()
 let connectionError = ''
 
-const lc = lightningChart()
+const lc = lightningChart({
+            resourcesBaseUrl: new URL(document.head.baseURI).origin + new URL(document.head.baseURI).pathname + 'resources/',
+        })
 const barChart = lc
     .BarChart({
         type: BarChartTypes.Horizontal,
