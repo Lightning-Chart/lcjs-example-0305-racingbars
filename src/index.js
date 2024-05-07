@@ -23,8 +23,11 @@ const barChart = lc
     .setTitle('COVID-19 cases ' + new Date(2020, 2, 15).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }))
     .setAutoCursorMode(AutoCursorModes.disabled)
     .setAnimationCategoryPosition(true, 2)
+    .setAnimationValues(true, 1)
 
-barChart.valueAxis.setTickStrategy(AxisTickStrategies.Numeric, (ticks) => ticks.setFormattingFunction(FormattingFunctions.NumericUnits))
+barChart.valueAxis
+    .setTickStrategy(AxisTickStrategies.Numeric, (ticks) => ticks.setFormattingFunction(FormattingFunctions.NumericUnits))
+    .setAnimationScroll(true)
 
 // Keep track of country colors so they don't change randomly as top 20 displayed countries change over time.
 const countryFillStyleCache = new Map()
