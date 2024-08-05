@@ -3,7 +3,7 @@
  */
 
 // Import LightningChartJS
-const lcjs = require('@arction/lcjs')
+const lcjs = require('@lightningchart/lcjs')
 
 // Extract required parts from LightningChartJS.
 const { lightningChart, BarChartTypes, AutoCursorModes, AxisTickStrategies, FormattingFunctions, Themes } = lcjs
@@ -21,7 +21,7 @@ const barChart = lc
         theme: Themes[new URLSearchParams(window.location.search).get('theme') || 'darkGold'] || undefined,
     })
     .setTitle('COVID-19 cases ' + new Date(2020, 2, 15).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }))
-    .setAutoCursorMode(AutoCursorModes.disabled)
+    .setCursorMode(undefined)
     .setAnimationCategoryPosition(true, 2)
     .setAnimationValues(true, 1)
 
