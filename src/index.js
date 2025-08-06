@@ -17,6 +17,7 @@ const lc = lightningChart({
         })
 const barChart = lc
     .BarChart({
+        legend: { visible: false },
         type: BarChartTypes.Horizontal,
         theme: Themes[new URLSearchParams(window.location.search).get('theme') || 'darkGold'] || undefined,
     })
