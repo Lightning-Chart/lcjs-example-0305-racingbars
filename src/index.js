@@ -25,6 +25,7 @@ const barChart = lc
     .setCursorMode(undefined)
     .setAnimationCategoryPosition(true, 2)
     .setAnimationValues(true, 1)
+    .setPadding({ left: 10, right: 48, top: 10, bottom: 10 })
 
 barChart.valueAxis
     .setTickStrategy(AxisTickStrategies.Numeric, (ticks) => ticks.setFormattingFunction(FormattingFunctions.NumericUnits))
