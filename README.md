@@ -22,7 +22,7 @@ The demo can be used as an example or a seed project. Local execution requires t
 _Also known as Bar Graph, Column Chart or Column Graph_
 
 Showcase of LightningChart JS Bar Charts in a _Racing Bar Chart_ context, to visualize tracking of the Co-Vid 19 virus.
-Tha data (country, history of cases) that is taken from API (https://coronavirus-tracker-api.herokuapp.com/confirmed)
+Tha data (country, history of cases) that is taken from API
 In setInterval loop data is sorted by total COVID cases per each day and top 20 cases added to
 the bars series in format `{ category: string, value: number }`.
 
