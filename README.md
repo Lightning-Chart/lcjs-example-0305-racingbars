@@ -57,7 +57,7 @@ Direct developer email support can be purchased through a [Support Plan][4] or b
 © LightningChart Ltd 2009-2026. All rights reserved.
 
 
-[Bar chart]: https://lightningchart.com/js-charts/api-documentation/v8.2.0/classes/BarChart.html
-[Bar chart Value Axis]: https://lightningchart.com/js-charts/api-documentation/v8.2.0/classes/BarChartValueAxis.html
-[Bar chart Category Axis]: https://lightningchart.com/js-charts/api-documentation/v8.2.0/classes/BarChartCategoryAxis.html
+[Bar chart]: https://lightningchart.com/js-charts/api-documentation/v8.3.0/classes/BarChart.html
+[Bar chart Value Axis]: https://lightningchart.com/js-charts/api-documentation/v8.3.0/classes/BarChartValueAxis.html
+[Bar chart Category Axis]: https://lightningchart.com/js-charts/api-documentation/v8.3.0/classes/BarChartCategoryAxis.html
 

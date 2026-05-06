@@ -31,6 +31,9 @@ textRenderer: window.lcjsSmallView ? lcjs.htmlTextRenderer : undefined,
     .setAnimationCategoryPosition(true, 2)
     .setAnimationValues(true, 1)
     .setPadding({ left: 10, right: 48, top: 10, bottom: 10 })
+    .setValueLabels({
+        position: 'inside-bar'
+    })
 
 barChart.valueAxis
     .setTickStrategy(AxisTickStrategies.Numeric, (ticks) => ticks.setFormattingFunction(FormattingFunctions.NumericUnits))
